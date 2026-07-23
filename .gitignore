@@ -1,0 +1,15 @@
+# Large synthetic dataset (regenerable; not source)
+dataset/*.csv
+
+# Trained artifacts are build outputs — regenerate with `python train.py`.
+# weights.yaml is hand-editable config, so it stays tracked (below).
+models/*.joblib
+models/feature_schema.json
+models/metrics.json
+models/comparison.csv
+!models/weights.yaml
+
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/

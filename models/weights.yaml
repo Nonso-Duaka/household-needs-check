@@ -1,0 +1,24 @@
+weights:
+  income_pressure: 0.18
+  housing_instability: 0.16
+  financial_fragility: 0.15
+  housing_cost_pressure: 0.12
+  food_access_pressure: 0.10
+  employment_instability: 0.08
+  digital_and_service_access: 0.08
+  health_family_need: 0.07
+  stress_signal: 0.06
+
+notes:
+  editable: This file is editable. Change a weight, restart the app, and every
+    hardship score recomputes. hardship.py asserts the nine weights sum to 1.0
+    and fails loudly if you break it.
+  source: Starting values from the reference notebook 04_hardship_scoring.ipynb.
+  renormalization: The web form cannot supply two components, so hardship.py
+    drops them and renormalizes the seven survivors (summing to 0.86) to 1.0.
+  dropped_stress_signal: mental_health_stress_score is soft-leakage and not asked.
+  dropped_digital_and_service_access: internet / childcare / health-insurance
+    are not asked on the form.
+  dropped_subsignals: Within survivors, sub-signals needing non-form fields
+    (eviction risk, debt-to-income, disability, senior-present) are dropped and
+    their sub-weights renormalized. See notes/derived.md.
