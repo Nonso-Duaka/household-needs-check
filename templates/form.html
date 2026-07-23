@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Screening form{% endblock %}
+{% block content %}
+<h1>Household screening</h1>
+<p class="lede">Answer 14 quick questions about one household. You'll get an
+estimated food-insecurity risk, a transparent hardship score, and a suggested
+priority segment — each with the reasons shown. The form is prefilled with a
+typical household so you can submit it right away.</p>
+
+{% if error %}<p class="error">Please check your entries: {{ error }}</p>{% endif %}
+
+<form method="post" action="/predict" class="screening">
+  {% for f in fields %}
+  <div class="field">
+    <label for="{{ f.name }}">{{ f.label }}</label>
+    {% if f.type == "categorical" %}
+      <select id="{{ f.name }}" name="{{ f.name }}">
+        {% for lvl in f.levels %}
+        <option value="{{ lvl }}" {% if values[f.name]|string == lvl %}selected{% endif %}>
+          {{ lvl.replace("_", " ") }}</option>
+        {% endfor %}
+      </select>
+    {% elif f.type == "binary" %}
+      <select id="{{ f.name }}" name="{{ f.name }}">
+        <option value="0" {% if values[f.name]|int == 0 %}selected{% endif %}>No</option>
+        <option value="1" {% if values[f.name]|int == 1 %}selected{% endif %}>Yes</option>
+      </select>
+    {% else %}
+      <input type="number" id="{{ f.name }}" name="{{ f.name }}"
+             value="{{ values[f.name] }}"
+             min="{{ f.min }}" max="{{ f.max }}"
+             step="{{ '0.1' if f.type == 'float' else '1' }}">
+    {% endif %}
+    <small class="helper">{{ f.helper }}</small>
+  </div>
+  {% endfor %}
+
+  <div class="actions">
+    <button type="submit">Estimate needs</button>
+  </div>
+</form>
+{% endblock %}

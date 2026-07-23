@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Household Needs Screening{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="banner" role="alert">
+    <strong>Demonstration only.</strong> Synthetic data. This is
+    <strong>not an eligibility determination</strong> and not a substitute for a
+    caseworker. Nothing you enter is stored or logged.
+  </div>
+
+  <header class="topbar">
+    <a class="brand" href="/">Household Needs Screening</a>
+    <nav>
+      <a href="/">Screening</a>
+      <a href="/leakage">Why 0.75, not 0.89</a>
+      <a href="/about">About</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="foot">
+    Estimates and suggestions for review only — never eligible / denied /
+    qualifies. Built on a synthetic teaching dataset.
+  </footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

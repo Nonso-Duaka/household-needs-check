@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Screening result{% endblock %}
+{% block content %}
+<p><a href="/">&larr; New screening</a></p>
+<h1>Estimated needs</h1>
+<p class="lede">Three separate outputs for this household. None is a decision.
+Read them as an estimate and starting points for review.</p>
+
+<!-- 1. FOOD INSECURITY RISK ------------------------------------------------ -->
+<section class="card" data-prob="{{ r.food.probability }}"
+         data-default-threshold="{{ r.food.threshold }}">
+  <h2>1. Estimated food-insecurity risk</h2>
+  <p class="bignum">{{ (r.food.probability * 100) | round(1) }}%
+    <span class="band band-{{ 'high' if r.food.probability >= 0.5 else 'low' }}">
+      {{ r.food.risk_band }}</span></p>
+
+  <div class="threshold-box">
+    <label for="thr">Flag threshold:
+      <output id="thrval">{{ (r.food.threshold * 100) | round(0) | int }}</output>%</label>
+    <input type="range" id="thr" min="5" max="95" step="1"
+           value="{{ (r.food.threshold * 100) | round(0) | int }}">
+    <p id="flagline" class="flagline">&nbsp;</p>
+    <small>Move the slider to see the precision/recall trade-off in real time.
+      Raising the threshold flags fewer households; lowering it flags more.
+      The shipped default is {{ (r.food.threshold * 100) | round(0) | int }}%.</small>
+  </div>
+
+  <h3>What pushed this estimate up or down</h3>
+  <p class="muted">Each bar is a feature's <em>coefficient &times; standardized
+    value</em> — an association the model found, not a cause.</p>
+  <div class="bars diverging">
+    {% for c in r.food.contributions %}
+    {% set pct = (c.contribution | abs / r.food.max_abs * 50) %}
+    <div class="drow">
+      <span class="dlabel">{{ c.label }}</span>
+      <span class="dtrack">
+        <span class="dbar {{ c.direction }}"
+              style="width: {{ pct }}%; {{ 'left:50%' if c.direction=='up' else 'right:50%' }};"></span>
+      </span>
+      <span class="dval {{ c.direction }}">
+        {{ '+' if c.direction == 'up' else '' }}{{ c.contribution | round(2) }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- 2. HARDSHIP SCORE ------------------------------------------------------ -->
+<section class="card">
+  <h2>2. Hardship score</h2>
+  <p class="bignum">{{ r.hardship.score }} <span class="muted">/ 100</span></p>
+  <p class="muted">Not a model — a transparent weighted sum of the components
+    below (weights are editable in <code>models/weights.yaml</code>).</p>
+  <div class="bars">
+    {% for c in r.hardship.components %}
+    <div class="hrow">
+      <span class="hlabel">{{ c.label }}</span>
+      <span class="htrack">
+        <span class="hbar" style="width: {{ (c.contribution / r.hardship.max_contribution * 100) }}%;"></span>
+      </span>
+      <span class="hval">{{ c.contribution }} pts</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- 3. POLICY SEGMENT ------------------------------------------------------ -->
+<section class="card">
+  <h2>3. Suggested policy-priority segment</h2>
+  <p class="bignum">{{ r.segment.segment.replace("_", " ") }}
+    <span class="muted">({{ (r.segment.confidence * 100) | round(1) }}% confidence)</span></p>
+  <p class="action">{{ r.segment.recommended_action }}</p>
+  <div class="bars">
+    {% for d in r.segment.distribution %}
+    <div class="hrow">
+      <span class="hlabel">{{ d.label }}</span>
+      <span class="htrack">
+        <span class="hbar {{ 'top' if d.segment == r.segment.segment else '' }}"
+              style="width: {{ (d.prob * 100) }}%;"></span>
+      </span>
+      <span class="hval">{{ (d.prob * 100) | round(1) }}%</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Derived transparency -->
+<section class="card subtle">
+  <h3>Computed from your answers (not asked)</h3>
+  <ul class="derived">
+    <li>Housing cost burden: <strong>{{ r.derived.rent_or_mortgage_burden_pct }}%</strong> of income</li>
+    <li>Income-to-poverty ratio: <strong>{{ r.derived.income_to_poverty_ratio }}</strong></li>
+    <li>Food-desert flag: <strong>{{ 'yes' if r.derived.food_desert_flag else 'no' }}</strong></li>
+  </ul>
+</section>
+{% endblock %}
+
+{% block scripts %}<script src="/static/app.js"></script>{% endblock %}

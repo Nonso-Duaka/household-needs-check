@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Why 0.75, not 0.89{% endblock %}
+{% block content %}
+<h1>Why this app ships the weaker-looking model</h1>
+<p class="lede">This is the most important page in the app. The honest model is
+the one with the lower score.</p>
+
+<h2>The measured trade-off</h2>
+<table class="metrics">
+  <thead><tr><th>Feature set</th><th>ROC AUC</th><th>Precision</th><th>Recall</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>All 42 predictors</td>
+      <td>{{ lesson.full_42_predictors.roc_auc }}</td>
+      <td>{{ lesson.full_42_predictors.precision }}</td>
+      <td>{{ lesson.full_42_predictors.recall }}</td>
+    </tr>
+    <tr>
+      <td>minus <code>food_budget_monthly_usd</code></td>
+      <td>{{ lesson.minus_food_budget.roc_auc }}</td>
+      <td>{{ lesson.minus_food_budget.precision }}</td>
+      <td>{{ lesson.minus_food_budget.recall }}</td>
+    </tr>
+    <tr class="shipped">
+      <td>Realistic answerable fields <strong>(shipped)</strong></td>
+      <td>{{ lesson.realistic_shipped.roc_auc }}</td>
+      <td>{{ lesson.realistic_shipped.precision }}</td>
+      <td>{{ lesson.realistic_shipped.recall }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Why a field defined "after hardship effects" cannot be used</h2>
+<p>Two columns in the dataset look like fantastic predictors and are quietly
+poisonous:</p>
+<ul>
+  <li><code>food_budget_monthly_usd</code> — the data dictionary defines it as
+    the budget remaining <em>"after income, housing cost, benefits, and
+    hardship effects."</em> It is computed <strong>downstream of the same
+    hardship process that produces the label.</strong></li>
+  <li><code>mental_health_stress_score</code> — defined as a score
+    <em>"correlated with household hardship."</em></li>
+</ul>
+<p>A model using them is partly reading its own answer key. It looks brilliant
+in validation and would be useless — or misleading — in the field, because a
+household filling out a form cannot answer either one. Dropping them takes ROC
+AUC from <strong>0.89 down to about 0.75</strong>. That drop is not a defect.
+It is the difference between a number that flatters the model and a number you
+could actually stand behind.</p>
+
+<div class="callout">
+  <strong>The honest model is the weaker-looking one.</strong> A screening tool
+  is only as good as the questions a real person can answer. We ship the ~0.75
+  model on purpose.
+</div>
+
+<h2>What "0.75" buys in practice</h2>
+<p>Ranked by estimated risk, the top slices still concentrate need:</p>
+<table class="metrics">
+  <thead><tr><th>Top slice by score</th><th>Precision</th><th>Share of all food-insecure captured</th></tr></thead>
+  <tbody>
+    {% for c in food_metrics.capacity_table %}
+    <tr><td>Top {{ c.top_pct }}%</td><td>{{ c.precision }}</td>
+      <td>{{ (c.share_of_positives_captured * 100) | round(0) | int }}%</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p class="muted">A caseworker reviewing the top 20% by estimated risk would be
+right about 3 times in 5 and would reach roughly 40% of all food-insecure
+households — useful triage, not a verdict.</p>
+{% endblock %}

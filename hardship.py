@@ -1,28 +1,3 @@
-"""Transparent household hardship score.
-
-This is deliberately NOT a fitted model. It is a weighted sum of interpretable
-components, each normalized to 0-1, so a first-year student can read exactly
-why a score is what it is. Weights live in an editable YAML file
-(``models/weights.yaml``); change a number, restart, and the score changes.
-
-The formulas and starting weights come from the reference notebook
-``04_hardship_scoring.ipynb``. Two things differ here because the web form
-cannot ask everything the notebook had:
-
-  * The ``stress_signal`` component (mental_health_stress_score) is soft-leakage
-    and is not on the form -> its top-level weight is dropped.
-  * The whole ``digital_and_service_access`` component (internet, childcare,
-    health-insurance) is not on the form -> its top-level weight is dropped.
-  * Within the surviving components, sub-signals that need non-form fields
-    (eviction risk, debt-to-income, disability, senior-present) are dropped and
-    the remaining sub-weights are renormalized.
-
-After dropping, the surviving top-level weights are renormalized to sum to 1.0
-so the score still spans 0-100. All of this is done explicitly and reported by
-``describe_renormalization()`` rather than silently passing zeros. See
-``notes/derived.md``.
-"""
-
 from __future__ import annotations
 
 import functools

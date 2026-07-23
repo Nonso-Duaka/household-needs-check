@@ -163,7 +163,6 @@ SEGMENT_ACTIONS = {
 }
 
 
-# ---------------------------------------------------------------------------
 def build_pipeline(estimator, features):
     cat = [c for c in features if c in ("housing_status", "employment_status",
                                         "income_volatility", "transportation_access")]
@@ -313,7 +312,7 @@ def assert_no_leakage(schema: dict):
     print("Leakage guard: OK (predictors clean, protected attrs absent from schema)")
 
 
-# ---------------------------------------------------------------------------
+
 def train_food_model(df, train_mask, val_mask, test_mask):
     pipe, num, cat = build_pipeline(
         LogisticRegression(class_weight="balanced", max_iter=3000),
@@ -450,7 +449,6 @@ def validate_hardship(df) -> dict:
     }
 
 
-# ---------------------------------------------------------------------------
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--compare", action="store_true",

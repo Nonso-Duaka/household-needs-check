@@ -1,15 +1,13 @@
-# Pinned to the versions this project was built and tested against.
-# Phase 1 (training) needs: pandas, numpy, scikit-learn, joblib, PyYAML.
-# Phase 2 (web app) additionally needs: fastapi, uvicorn, jinja2,
-# pydantic, python-multipart.
 pandas==2.2.3
 numpy==2.2.5
 scikit-learn==1.8.0
 joblib==1.5.3
 PyYAML==6.0.3
 fastapi==0.115.0
+starlette==0.38.6
 uvicorn==0.32.0
 jinja2==3.1.6
 pydantic==2.9.2
 python-multipart==0.0.12
+httpx==0.27.2
 pytest==8.3.3
