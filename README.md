@@ -47,15 +47,37 @@ Then open <http://127.0.0.1:8000>. The form is prefilled with a typical
 household, so you can submit it immediately.
 
 Routes: `/` (form) · `POST /predict` (HTML result) · `POST /api/predict`
-(JSON) · `/about` · `/leakage` · `/health` (artifact versions + schema hash).
+(JSON) · `/health` (artifact versions + schema hash).
 
 ```bash
-pytest        # 16 tests
+pytest        # 14 tests
 ```
 
 The app fails to start on purpose if an artifact is missing or a model's schema
 hash does not match `feature_schema.json` — it never silently serves a stale
 model. If startup complains, run `python train.py` and try again.
+
+## Deploy (Render)
+
+The repo ships with `render.yaml`, a `Procfile`, and a pinned Python version,
+so a container host runs the app with **no code changes**.
+
+1. Push to GitHub (already done for this repo).
+2. On [render.com](https://render.com), sign in with GitHub, then
+   **New + → Blueprint** and pick this repo. Render reads `render.yaml` and
+   configures the build (`pip install -r requirements.txt`) and start command
+   (`uvicorn app:app --host 0.0.0.0 --port $PORT`) automatically.
+3. **Apply**. First build takes ~3–5 min (it installs scikit-learn/pandas).
+   You get a public URL like `https://household-needs-check.onrender.com`.
+
+> **Live app:** _add your Render URL here once it's deployed._
+
+The small model artifacts (`models/*.joblib`, `feature_schema.json`,
+`weights.yaml`) are committed so the deploy has everything it needs; the 30 MB
+training dataset is **not** required at runtime and is excluded.
+
+Free-tier note: the service spins down after ~15 min idle, so the first request
+after a lull takes ~30–50 s to wake, then it's instant.
 
 ## Retrain
 
