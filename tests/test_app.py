@@ -144,7 +144,7 @@ def test_soft_leakage_absent_from_schema_text():
 
 
 # --- Pages render ---------------------------------------------------------
-@pytest.mark.parametrize("path", ["/", "/about", "/leakage", "/health"])
+@pytest.mark.parametrize("path", ["/", "/health"])
 def test_pages_load(path):
     assert client.get(path).status_code == 200
 

@@ -1,97 +1,151 @@
 {% extends "base.html" %}
-{% block title %}Screening result{% endblock %}
+{% block title %}Your results — Household Needs Check{% endblock %}
 {% block content %}
-<p><a href="/">&larr; New screening</a></p>
-<h1>Estimated needs</h1>
-<p class="lede">Three separate outputs for this household. None is a decision.
-Read them as an estimate and starting points for review.</p>
 
-<!-- 1. FOOD INSECURITY RISK ------------------------------------------------ -->
-<section class="card" data-prob="{{ r.food.probability }}"
-         data-default-threshold="{{ r.food.threshold }}">
-  <h2>1. Estimated food-insecurity risk</h2>
-  <p class="bignum">{{ (r.food.probability * 100) | round(1) }}%
-    <span class="band band-{{ 'high' if r.food.probability >= 0.5 else 'low' }}">
-      {{ r.food.risk_band }}</span></p>
+<div class="results-head">
+  <a class="back" href="/">Start over</a>
+  <h1>Your results</h1>
+</div>
 
-  <div class="threshold-box">
-    <label for="thr">Flag threshold:
-      <output id="thrval">{{ (r.food.threshold * 100) | round(0) | int }}</output>%</label>
-    <input type="range" id="thr" min="5" max="95" step="1"
-           value="{{ (r.food.threshold * 100) | round(0) | int }}">
-    <p id="flagline" class="flagline">&nbsp;</p>
-    <small>Move the slider to see the precision/recall trade-off in real time.
-      Raising the threshold flags fewer households; lowering it flags more.
-      The shipped default is {{ (r.food.threshold * 100) | round(0) | int }}%.</small>
+<!-- 1. FOOD --------------------------------------------------------------- -->
+{% set circ = 326.726 %}
+<section class="result-card" data-prob="{{ r.food.probability }}"
+         data-threshold="{{ (r.food.threshold * 100) | round(0) | int }}">
+  <div class="card-top">
+    <span class="card-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 8h16l-1.2 11a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8Z"/>
+        <path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+    </span>
+    <h2>Chance of struggling for food</h2>
   </div>
 
-  <h3>What pushed this estimate up or down</h3>
-  <p class="muted">Each bar is a feature's <em>coefficient &times; standardized
-    value</em> — an association the model found, not a cause.</p>
-  <div class="bars diverging">
-    {% for c in r.food.contributions %}
+  <div class="gauge-row">
+    <svg class="gauge" viewBox="0 0 120 120" role="img"
+         aria-label="{{ (r.food.probability * 100) | round(0) | int }} percent chance">
+      <circle class="gauge-track" cx="60" cy="60" r="52"/>
+      <circle class="gauge-value {{ 'is-high' if r.food.probability >= 0.5 else 'is-low' }}"
+              cx="60" cy="60" r="52" transform="rotate(-90 60 60)"
+              stroke-dasharray="{{ circ }}"
+              stroke-dashoffset="{{ circ * (1 - r.food.probability) }}"/>
+      <text class="gauge-num" x="60" y="62">{{ (r.food.probability * 100) | round(0) | int }}%</text>
+    </svg>
+    <div class="gauge-side">
+      <span class="chip chip-{{ 'high' if r.food.probability >= 0.5 else 'low' }}">
+        {{ r.food.risk_band }}</span>
+      <p class="gauge-note">About {{ (r.food.probability * 10) | round(0) | int }} in 10 households like this one.</p>
+    </div>
+  </div>
+
+  <div class="tuner">
+    <div class="tuner-head">
+      <span class="tuner-q">Flag if chance is over</span>
+      <span class="tuner-val"><output id="thrval">{{ (r.food.threshold * 100) | round(0) | int }}</output>%</span>
+    </div>
+    <input type="range" id="thr" min="5" max="95" step="5"
+           value="{{ (r.food.threshold * 100) | round(0) | int }}">
+    <p id="flagline" class="flagline">&nbsp;</p>
+  </div>
+
+  <div class="mini-head">
+    <h3>What moved this</h3>
+    <span class="legend"><i class="dot up"></i>raised <i class="dot down"></i>lowered</span>
+  </div>
+  <div class="diverging">
+    {% for c in r.food.contributions[:8] %}
     {% set pct = (c.contribution | abs / r.food.max_abs * 50) %}
     <div class="drow">
       <span class="dlabel">{{ c.label }}</span>
       <span class="dtrack">
-        <span class="dbar {{ c.direction }}"
-              style="width: {{ pct }}%; {{ 'left:50%' if c.direction=='up' else 'right:50%' }};"></span>
+        <span class="dbar {{ c.direction }}" style="width: {{ pct }}%;
+          {{ 'left:50%' if c.direction=='up' else 'right:50%' }};"></span>
       </span>
-      <span class="dval {{ c.direction }}">
-        {{ '+' if c.direction == 'up' else '' }}{{ c.contribution | round(2) }}</span>
     </div>
     {% endfor %}
   </div>
 </section>
 
-<!-- 2. HARDSHIP SCORE ------------------------------------------------------ -->
-<section class="card">
-  <h2>2. Hardship score</h2>
-  <p class="bignum">{{ r.hardship.score }} <span class="muted">/ 100</span></p>
-  <p class="muted">Not a model — a transparent weighted sum of the components
-    below (weights are editable in <code>models/weights.yaml</code>).</p>
-  <div class="bars">
-    {% for c in r.hardship.components %}
-    <div class="hrow">
-      <span class="hlabel">{{ c.label }}</span>
-      <span class="htrack">
-        <span class="hbar" style="width: {{ (c.contribution / r.hardship.max_contribution * 100) }}%;"></span>
-      </span>
-      <span class="hval">{{ c.contribution }} pts</span>
+<!-- 2. STRESS SCORE ------------------------------------------------------- -->
+<section class="result-card">
+  <div class="card-top">
+    <span class="card-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+    </span>
+    <h2>Overall stress score</h2>
+  </div>
+
+  <div class="gauge-row">
+    <svg class="gauge" viewBox="0 0 120 120" role="img"
+         aria-label="Stress score {{ r.hardship.score | round(0) | int }} out of 100">
+      <circle class="gauge-track" cx="60" cy="60" r="52"/>
+      <circle class="gauge-value neutral" cx="60" cy="60" r="52" transform="rotate(-90 60 60)"
+              stroke-dasharray="{{ circ }}"
+              stroke-dashoffset="{{ circ * (1 - r.hardship.score / 100) }}"/>
+      <text class="gauge-num" x="60" y="56">{{ r.hardship.score | round(0) | int }}</text>
+      <text class="gauge-sub" x="60" y="76">/ 100</text>
+    </svg>
+    <div class="gauge-side">
+      <div class="bars tight">
+        {% for c in r.hardship.components %}
+        <div class="brow">
+          <span class="blabel">{{ c.label }}</span>
+          <span class="btrack"><span class="bbar"
+            style="width: {{ (c.contribution / r.hardship.max_contribution * 100) }}%;"></span></span>
+        </div>
+        {% endfor %}
+      </div>
     </div>
-    {% endfor %}
   </div>
 </section>
 
-<!-- 3. POLICY SEGMENT ------------------------------------------------------ -->
-<section class="card">
-  <h2>3. Suggested policy-priority segment</h2>
-  <p class="bignum">{{ r.segment.segment.replace("_", " ") }}
-    <span class="muted">({{ (r.segment.confidence * 100) | round(1) }}% confidence)</span></p>
-  <p class="action">{{ r.segment.recommended_action }}</p>
+<!-- 3. WHAT HELP FITS ----------------------------------------------------- -->
+<section class="result-card">
+  <div class="card-top">
+    <span class="card-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.8 8.6a5 5 0 0 0-7.1-.1L12 10l-1.7-1.5a5 5 0 0 0-7.1 7.1L12 21l8.8-5.3a5 5 0 0 0 0-7.1Z"/></svg>
+    </span>
+    <h2>Help that may fit</h2>
+  </div>
+  <p class="segment-name">{{ r.segment.label }}</p>
+  <p class="segment-action">{{ r.segment.recommended_action }}</p>
   <div class="bars">
     {% for d in r.segment.distribution %}
-    <div class="hrow">
-      <span class="hlabel">{{ d.label }}</span>
-      <span class="htrack">
-        <span class="hbar {{ 'top' if d.segment == r.segment.segment else '' }}"
-              style="width: {{ (d.prob * 100) }}%;"></span>
-      </span>
-      <span class="hval">{{ (d.prob * 100) | round(1) }}%</span>
+    <div class="brow">
+      <span class="blabel">{{ d.label }}</span>
+      <span class="btrack"><span class="bbar {{ 'top' if d.segment == r.segment.segment else '' }}"
+        style="width: {{ (d.prob * 100) }}%;"></span></span>
+      <span class="bval">{{ (d.prob * 100) | round(0) | int }}%</span>
     </div>
     {% endfor %}
   </div>
 </section>
 
-<!-- Derived transparency -->
-<section class="card subtle">
-  <h3>Computed from your answers (not asked)</h3>
-  <ul class="derived">
-    <li>Housing cost burden: <strong>{{ r.derived.rent_or_mortgage_burden_pct }}%</strong> of income</li>
-    <li>Income-to-poverty ratio: <strong>{{ r.derived.income_to_poverty_ratio }}</strong></li>
-    <li>Food-desert flag: <strong>{{ 'yes' if r.derived.food_desert_flag else 'no' }}</strong></li>
-  </ul>
+<!-- Derived --------------------------------------------------------------- -->
+<section class="result-card subtle">
+  <div class="stat-row">
+    <div class="stat">
+      <span class="stat-num">{{ r.derived.rent_or_mortgage_burden_pct | round(0) | int }}%</span>
+      <span class="stat-cap">of income on housing</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">{{ r.derived.income_to_poverty_ratio }}&times;</span>
+      <span class="stat-cap">the poverty line</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">{{ 'Yes' if r.derived.food_desert_flag else 'No' }}</span>
+      <span class="stat-cap">far from a store</span>
+    </div>
+  </div>
 </section>
+
+<div class="submit-row">
+  <a class="btn-secondary" href="/">Try another household</a>
+</div>
 {% endblock %}
 
 {% block scripts %}<script src="/static/app.js"></script>{% endblock %}

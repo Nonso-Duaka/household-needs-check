@@ -84,82 +84,109 @@ DEFAULT_HARDSHIP_WEIGHTS = {
     "stress_signal": 0.06,
 }
 
-# Plain-English labels + helper sentences for the form (rendered from schema).
+# Friendly, plain-language field metadata. The form renders entirely from this
+# (via feature_schema.json): question text, helper, the choices, and which
+# section it sits in. Order here is the order shown in each section.
 FIELD_META = {
-    "monthly_income_usd": ("int", 300, 25000,
-        "Monthly household income (before tax), all sources",
-        "Add up take-home pay, benefits, and any other cash income for everyone in the home."),
-    "household_size": ("int", 1, 8,
-        "People in the household",
-        "Count everyone who lives here, adults and children."),
-    "children_count": ("int", 0, 7,
-        "Children in the household",
-        "How many household members are under 18."),
-    "monthly_housing_cost_usd": ("int", 0, 9000,
-        "Monthly housing cost",
-        "Rent or mortgage plus anything bundled with it. Enter 0 if you pay nothing."),
-    "housing_status": ("categorical", None, None,
-        "Housing situation",
-        "The arrangement that best describes where you live now.",
-        ["own_mortgage", "own_no_mortgage", "rent", "doubled_up", "shelter_or_transitional"]),
-    "employment_status": ("categorical", None, None,
-        "Work situation of the main earner",
-        "The status that best fits the household's primary earner.",
-        ["employed_full_time", "employed_part_time", "unemployed",
-         "not_in_labor_force", "retired", "student_or_training"]),
-    "income_volatility": ("categorical", None, None,
-        "How steady is your income?",
-        "Low = about the same each month; high = it swings a lot.",
-        ["low", "medium", "high"]),
-    "savings_buffer_days": ("int", 0, 180,
-        "Days of expenses you could cover from savings",
-        "Roughly how many days you could pay for basics using only savings."),
-    "benefits_snap": ("binary", 0, 1,
-        "Receiving SNAP / food assistance?",
-        "Whether the household currently gets SNAP-style food benefits."),
-    "transportation_access": ("categorical", None, None,
-        "Transportation access",
-        "How reliably you can get to work, care, and food.",
-        ["reliable", "limited", "no_vehicle_or_transit"]),
-    "distance_to_grocery_miles": ("float", 0.1, 45,
-        "Distance to the nearest grocery store (miles)",
-        "Approximate miles to a full grocery store, not a convenience store."),
-    "behind_on_housing_payment": ("binary", 0, 1,
-        "Behind on rent or mortgage?",
-        "Whether you are currently behind on a housing payment."),
-    "utility_shutoff_notice": ("binary", 0, 1,
-        "Utility shut-off notice recently?",
-        "Whether you have received a notice that a utility may be shut off."),
-    "chronic_health_condition": ("binary", 0, 1,
-        "Chronic health condition in the household?",
-        "Whether anyone in the home has an ongoing health condition."),
+    "household_size": {"type": "int", "min": 1, "max": 8, "group": "Your household",
+        "label": "How many people live in your home?",
+        "helper": "Count everyone — grown-ups and kids."},
+    "children_count": {"type": "int", "min": 0, "max": 7, "group": "Your household",
+        "label": "How many of them are kids (under 18)?",
+        "helper": "Put 0 if there are none."},
+    "monthly_income_usd": {"type": "int", "min": 300, "max": 25000, "group": "Money & work",
+        "label": "How much money does your household get each month?",
+        "helper": "Add up everything everyone brings in — pay, benefits, all of it."},
+    "employment_status": {"type": "categorical", "group": "Money & work",
+        "label": "Does the main earner have a job?",
+        "helper": "Pick what fits best right now.",
+        "levels": ["employed_full_time", "employed_part_time", "unemployed",
+                   "not_in_labor_force", "retired", "student_or_training"],
+        "level_labels": {
+            "employed_full_time": "Yes, full-time", "employed_part_time": "Yes, part-time",
+            "unemployed": "No, looking for work", "not_in_labor_force": "No, not looking",
+            "retired": "Retired", "student_or_training": "In school or training"}},
+    "income_volatility": {"type": "categorical", "group": "Money & work",
+        "label": "Is that money about the same every month?",
+        "helper": "Some jobs pay the same each month; others go up and down.",
+        "levels": ["low", "medium", "high"],
+        "level_labels": {"low": "About the same", "medium": "Changes a little",
+                         "high": "Changes a lot"}},
+    "savings_buffer_days": {"type": "int", "min": 0, "max": 180, "group": "Money & work",
+        "label": "If the money stopped, how many days could savings cover the basics?",
+        "helper": "A rough guess is fine. 0 means no savings to fall back on."},
+    "benefits_snap": {"type": "binary", "group": "Money & work",
+        "label": "Does your household get SNAP (food stamps)?",
+        "helper": ""},
+    "monthly_housing_cost_usd": {"type": "int", "min": 0, "max": 9000, "group": "Your home",
+        "label": "How much do you pay for housing each month?",
+        "helper": "Rent or mortgage. Put 0 if you pay nothing."},
+    "housing_status": {"type": "categorical", "group": "Your home",
+        "label": "What's your home situation?",
+        "helper": "",
+        "levels": ["own_mortgage", "own_no_mortgage", "rent", "doubled_up",
+                   "shelter_or_transitional"],
+        "level_labels": {
+            "own_mortgage": "Own it, still paying it off", "own_no_mortgage": "Own it, paid off",
+            "rent": "Renting", "doubled_up": "Staying with family or friends",
+            "shelter_or_transitional": "Shelter or temporary housing"}},
+    "behind_on_housing_payment": {"type": "binary", "group": "Your home",
+        "label": "Are you behind on rent or mortgage?",
+        "helper": ""},
+    "utility_shutoff_notice": {"type": "binary", "group": "Your home",
+        "label": "Had a shut-off warning for a utility lately?",
+        "helper": "Like a notice that power, water, or gas might be turned off."},
+    "transportation_access": {"type": "categorical", "group": "Food & getting around",
+        "label": "How easy is it to get around?",
+        "helper": "For work, appointments, and shopping.",
+        "levels": ["reliable", "limited", "no_vehicle_or_transit"],
+        "level_labels": {"reliable": "Easy — I have a reliable ride",
+                         "limited": "A bit hard", "no_vehicle_or_transit": "Very hard — no car or bus"}},
+    "distance_to_grocery_miles": {"type": "float", "min": 0.1, "max": 45, "group": "Food & getting around",
+        "label": "How far is the nearest grocery store, in miles?",
+        "helper": "A real grocery store, not a corner shop."},
+    "chronic_health_condition": {"type": "binary", "group": "Health",
+        "label": "Does anyone at home have an ongoing health condition?",
+        "helper": "Something long-term, like diabetes or asthma."},
 }
+
+# Section order for the form.
+GROUP_ORDER = ["Your household", "Money & work", "Your home",
+               "Food & getting around", "Health"]
 
 DERIVED_META = {
     "rent_or_mortgage_burden_pct": (
         "min(100 * monthly_housing_cost_usd / monthly_income_usd, 200)",
-        "Share of income that goes to housing, capped at 200%."),
+        "The share of your money that goes to housing."),
     "income_to_poverty_ratio": (
         "(monthly_income_usd * 12) / (15060 + 5380 * (household_size - 1))",
-        "Annual income over the 2024 federal poverty guideline for the household size."),
+        "Your income compared with the official poverty line."),
     "food_desert_flag": (
         "1 if transportation_access != 'reliable' and distance_to_grocery_miles > 1.5 else 0",
-        "Limited food access: far from a grocery store without reliable transport."),
+        "Whether it's hard to reach a grocery store."),
 }
 
 RISK_BANDS = [
-    {"label": "Lower estimated risk", "min": 0.0, "max": 0.25},
-    {"label": "Moderate estimated risk", "min": 0.25, "max": 0.50},
-    {"label": "Elevated estimated risk", "min": 0.50, "max": 0.70},
-    {"label": "Higher estimated risk", "min": 0.70, "max": 1.01},
+    {"label": "Low chance", "min": 0.0, "max": 0.25},
+    {"label": "Some chance", "min": 0.25, "max": 0.50},
+    {"label": "Higher chance", "min": 0.50, "max": 0.70},
+    {"label": "High chance", "min": 0.70, "max": 1.01},
 ]
 
+SEGMENT_LABELS = {
+    "stable_or_low_need": "Fairly steady for now",
+    "prevention_support": "Could use a little support",
+    "benefit_navigation": "Help signing up for benefits",
+    "housing_emergency": "Housing help needed",
+    "severe_multiple_hardship": "Needs coordinated support",
+}
+
 SEGMENT_ACTIONS = {
-    "stable_or_low_need": "Monitor; share general resource information.",
-    "prevention_support": "Suggested for review: light-touch prevention support and budgeting resources.",
-    "benefit_navigation": "Suggested for review: SNAP/WIC/school-meal screening and application help.",
-    "housing_emergency": "Suggested for review: rental assistance, eviction prevention, and utility support.",
-    "severe_multiple_hardship": "Suggested for review: intensive case management and multi-benefit coordination.",
+    "stable_or_low_need": "Things look fairly steady right now. General resources may still be useful.",
+    "prevention_support": "A little help now — like budgeting support — could keep small problems from growing.",
+    "benefit_navigation": "Getting signed up for benefits like SNAP, WIC, or school meals could help the most.",
+    "housing_emergency": "Housing looks like the urgent need — rent help, eviction help, or utility help.",
+    "severe_multiple_hardship": "Several needs at once. Someone who can coordinate different kinds of help would fit best.",
 }
 
 
@@ -249,24 +276,30 @@ def capacity_table(y_true: np.ndarray, y_score: np.ndarray) -> list[dict]:
 
 
 def build_schema(df: pd.DataFrame, food_num, food_cat, positive_rate) -> dict:
+    # Emit form fields grouped into sections (GROUP_ORDER), preserving the
+    # order fields appear within FIELD_META for each section.
     form = []
-    for name in FORM_FIELDS:
-        meta = FIELD_META[name]
-        ftype, lo, hi, label, helper = meta[0], meta[1], meta[2], meta[3], meta[4]
-        levels = meta[5] if len(meta) > 5 else None
+    ordered = sorted(FIELD_META.items(),
+                     key=lambda kv: (GROUP_ORDER.index(kv[1]["group"]),
+                                     list(FIELD_META).index(kv[0])))
+    for name, meta in ordered:
+        ftype = meta["type"]
         if ftype == "categorical":
             default = df[name].mode().iloc[0]
         elif ftype == "binary":
             default = 0
         else:
-            default = int(round(df[name].median())) if ftype == "int" \
-                else round(float(df[name].median()), 1)
-        field = {"name": name, "type": ftype, "label": label, "helper": helper,
-                 "default": default}
-        if levels is not None:
-            field["levels"] = levels
+            default = (int(round(df[name].median())) if ftype == "int"
+                       else round(float(df[name].median()), 1))
+        field = {"name": name, "type": ftype, "group": meta["group"],
+                 "label": meta["label"], "helper": meta["helper"], "default": default}
+        if ftype == "categorical":
+            field["levels"] = meta["levels"]
+            field["level_labels"] = meta["level_labels"]
+        elif ftype == "binary":
+            field["min"], field["max"] = 0, 1
         else:
-            field["min"], field["max"] = lo, hi
+            field["min"], field["max"] = meta["min"], meta["max"]
         form.append(field)
 
     derived = [{"name": n, "formula": DERIVED_META[n][0],
@@ -289,8 +322,9 @@ def build_schema(df: pd.DataFrame, food_num, food_cat, positive_rate) -> dict:
             "categorical_features": food_cat,
         },
         "segments": {"classes": sorted(df[SEGMENT_TARGET].unique().tolist()),
-                     "actions": SEGMENT_ACTIONS},
+                     "labels": SEGMENT_LABELS, "actions": SEGMENT_ACTIONS},
         "form_fields": form,
+        "groups": GROUP_ORDER,
         "derived_fields": derived,
     }
     schema["schema_hash"] = schema_hash(schema)

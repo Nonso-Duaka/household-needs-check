@@ -1,42 +1,57 @@
 {% extends "base.html" %}
-{% block title %}Screening form{% endblock %}
+{% block title %}Start — Household Needs Check{% endblock %}
 {% block content %}
-<h1>Household screening</h1>
-<p class="lede">Answer 14 quick questions about one household. You'll get an
-estimated food-insecurity risk, a transparent hardship score, and a suggested
-priority segment — each with the reasons shown. The form is prefilled with a
-typical household so you can submit it right away.</p>
 
-{% if error %}<p class="error">Please check your entries: {{ error }}</p>{% endif %}
+<section class="hero">
+  <h1>What help might fit your household?</h1>
+  <p>Answer a few questions. Takes about two minutes. Already filled in — change
+  anything you like.</p>
+</section>
 
-<form method="post" action="/predict" class="screening">
-  {% for f in fields %}
-  <div class="field">
-    <label for="{{ f.name }}">{{ f.label }}</label>
-    {% if f.type == "categorical" %}
-      <select id="{{ f.name }}" name="{{ f.name }}">
-        {% for lvl in f.levels %}
-        <option value="{{ lvl }}" {% if values[f.name]|string == lvl %}selected{% endif %}>
-          {{ lvl.replace("_", " ") }}</option>
-        {% endfor %}
-      </select>
-    {% elif f.type == "binary" %}
-      <select id="{{ f.name }}" name="{{ f.name }}">
-        <option value="0" {% if values[f.name]|int == 0 %}selected{% endif %}>No</option>
-        <option value="1" {% if values[f.name]|int == 1 %}selected{% endif %}>Yes</option>
-      </select>
-    {% else %}
-      <input type="number" id="{{ f.name }}" name="{{ f.name }}"
-             value="{{ values[f.name] }}"
-             min="{{ f.min }}" max="{{ f.max }}"
-             step="{{ '0.1' if f.type == 'float' else '1' }}">
-    {% endif %}
-    <small class="helper">{{ f.helper }}</small>
-  </div>
+{% if error %}<p class="form-error">{{ error }}</p>{% endif %}
+
+<form method="post" action="/predict" class="survey">
+  {% for section in sections %}
+  <fieldset class="survey-section">
+    <legend>{{ section.name }}</legend>
+    <div class="field-grid">
+      {% for f in section.fields %}
+      <div class="field {{ 'field-wide' if f.type in ['categorical'] else '' }}">
+        <label for="{{ f.name }}">{{ f.label }}</label>
+        {% if f.type == "categorical" %}
+          <select id="{{ f.name }}" name="{{ f.name }}">
+            {% for lvl in f.levels %}
+            <option value="{{ lvl }}" {% if values[f.name]|string == lvl %}selected{% endif %}>
+              {{ f.level_labels[lvl] if f.level_labels and lvl in f.level_labels else lvl.replace("_"," ") }}
+            </option>
+            {% endfor %}
+          </select>
+        {% elif f.type == "binary" %}
+          <div class="toggle" role="group" aria-label="{{ f.label }}">
+            <input type="radio" id="{{ f.name }}_no" name="{{ f.name }}" value="0"
+                   {% if values[f.name]|int == 0 %}checked{% endif %}>
+            <label for="{{ f.name }}_no" class="toggle-opt">No</label>
+            <input type="radio" id="{{ f.name }}_yes" name="{{ f.name }}" value="1"
+                   {% if values[f.name]|int == 1 %}checked{% endif %}>
+            <label for="{{ f.name }}_yes" class="toggle-opt">Yes</label>
+          </div>
+        {% else %}
+          <input type="number" id="{{ f.name }}" name="{{ f.name }}"
+                 value="{{ values[f.name] }}"
+                 min="{{ f.min }}" max="{{ f.max }}"
+                 step="{{ '0.1' if f.type == 'float' else '1' }}"
+                 inputmode="{{ 'decimal' if f.type == 'float' else 'numeric' }}">
+        {% endif %}
+        {% if f.helper %}<small class="hint">{{ f.helper }}</small>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </fieldset>
   {% endfor %}
 
-  <div class="actions">
-    <button type="submit">Estimate needs</button>
+  <div class="submit-row">
+    <button type="submit">See my results</button>
+    <p class="submit-note">You'll see an estimate — not a yes or no answer.</p>
   </div>
 </form>
 {% endblock %}

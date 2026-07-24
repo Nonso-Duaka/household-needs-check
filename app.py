@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +16,33 @@ import schema as S
 
 ROOT = Path(__file__).parent
 MODELS = ROOT / "models"
+
+# Short, plain labels for the "what changed the estimate" bars.
+SHORT_LABELS = {
+    "monthly_income_usd": "Monthly income", "household_size": "People at home",
+    "children_count": "Number of kids", "monthly_housing_cost_usd": "Housing cost",
+    "housing_status": "Home situation", "employment_status": "Job situation",
+    "income_volatility": "Steady income?", "savings_buffer_days": "Savings cushion",
+    "benefits_snap": "Gets SNAP", "transportation_access": "Getting around",
+    "distance_to_grocery_miles": "Distance to store",
+    "behind_on_housing_payment": "Behind on housing",
+    "utility_shutoff_notice": "Utility shut-off notice",
+    "chronic_health_condition": "Health condition",
+    "rent_or_mortgage_burden_pct": "Housing share of income",
+    "income_to_poverty_ratio": "Income vs. poverty line",
+    "food_desert_flag": "Far from a store",
+}
+
+# Plain labels for the hardship-score parts.
+HARDSHIP_LABELS = {
+    "income_pressure": "Not enough money coming in",
+    "housing_cost_pressure": "Housing takes a big share",
+    "housing_instability": "Behind on housing or utilities",
+    "financial_fragility": "Little savings to fall back on",
+    "employment_instability": "Job situation",
+    "food_access_pressure": "Hard to reach a store",
+    "health_family_need": "Health and family needs",
+}
 
 def _load_bundle(name: str) -> dict:
     path = MODELS / name
@@ -36,7 +62,6 @@ FOOD_BUNDLE = _load_bundle("food_model.joblib")
 SEGMENT_BUNDLE = _load_bundle("segment_model.joblib")
 FOOD_PIPE = FOOD_BUNDLE["pipeline"]
 SEGMENT_PIPE = SEGMENT_BUNDLE["pipeline"]
-METRICS = json.loads((MODELS / "metrics.json").read_text()) if (MODELS / "metrics.json").exists() else {}
 # Touch the weights once so a broken weights.yaml fails at startup, not per-request.
 hardship.load_weights()
 
@@ -69,14 +94,12 @@ def food_contributions(X: pd.DataFrame) -> list[dict]:
 
     by_field: dict[str, float] = {}
     for name, contribution in zip(names, z * coef):
-        # 'num__monthly_income_usd' -> monthly_income_usd
-        # 'cat__housing_status_rent' -> housing_status
         stripped = name.split("__", 1)[1]
         field = next((f for f in S.FEATURE_ORDER if stripped.startswith(f)), stripped)
         by_field[field] = by_field.get(field, 0.0) + float(contribution)
 
     rows = [
-        {"field": f, "label": S.FIELD_LABELS.get(f, f),
+        {"field": f, "label": SHORT_LABELS.get(f, f),
          "contribution": round(v, 4),
          "direction": "up" if v > 0 else "down"}
         for f, v in by_field.items()
@@ -103,14 +126,17 @@ def predict_segment(form: dict[str, Any]) -> dict[str, Any]:
     X = _model_frame(row)
     proba = SEGMENT_PIPE.predict_proba(X)[0]
     classes = list(SEGMENT_PIPE.named_steps["model"].classes_)
+    labels = S.SEGMENTS.get("labels", {})
     dist = sorted(
-        [{"segment": c, "label": c.replace("_", " "), "prob": round(float(p), 4)}
+        [{"segment": c, "label": labels.get(c, c.replace("_", " ")),
+          "prob": round(float(p), 4)}
          for c, p in zip(classes, proba)],
         key=lambda d: d["prob"], reverse=True,
     )
     top = dist[0]["segment"]
     return {
         "segment": top,
+        "label": labels.get(top, top.replace("_", " ")),
         "confidence": dist[0]["prob"],
         "distribution": dist,
         "recommended_action": S.SEGMENTS["actions"].get(top, ""),
@@ -122,7 +148,7 @@ def score_all(form: dict[str, Any]) -> dict[str, Any]:
     row = feature_row(form)
     hs_score, hs_components = hardship.score_household(form)
     for c in hs_components:
-        c["label"] = c["name"].replace("_", " ")
+        c["label"] = HARDSHIP_LABELS.get(c["name"], c["name"].replace("_", " "))
     food = predict_food(form)
     food["max_abs"] = max((abs(c["contribution"]) for c in food["contributions"]),
                           default=1.0) or 1.0
@@ -142,10 +168,25 @@ def score_all(form: dict[str, Any]) -> dict[str, Any]:
 
 
 
+def grouped_fields():
+    """Form fields bucketed into their sections, in schema order."""
+    groups = S.SCHEMA.get("groups") or []
+    sections = []
+    for g in groups:
+        fields = [f for f in S.FORM_FIELDS if f.get("group") == g]
+        if fields:
+            sections.append({"name": g, "fields": fields})
+    # Any ungrouped fields (defensive) go in a trailing catch-all.
+    leftover = [f for f in S.FORM_FIELDS if f.get("group") not in groups]
+    if leftover:
+        sections.append({"name": "More", "fields": leftover})
+    return sections
+
+
 @app.get("/", response_class=HTMLResponse)
 def form_get(request: Request):
     return templates.TemplateResponse(request, "form.html", {
-        "fields": S.FORM_FIELDS, "values": S.defaults(),
+        "sections": grouped_fields(), "values": S.defaults(),
     })
 
 
@@ -167,8 +208,8 @@ async def predict_html(request: Request):
         clean = S.HouseholdInput(**typed).model_dump()
     except Exception as exc:  # re-render form with a message
         return templates.TemplateResponse(request, "form.html", {
-            "fields": S.FORM_FIELDS, "values": {**S.defaults(), **typed},
-            "error": str(exc),
+            "sections": grouped_fields(), "values": {**S.defaults(), **typed},
+            "error": "Please double-check your answers and try again.",
         }, status_code=422)
     result = score_all(clean)
     return templates.TemplateResponse(request, "result.html", {
@@ -180,19 +221,6 @@ async def predict_html(request: Request):
 def predict_api(payload: S.HouseholdInput):  # type: ignore[valid-type]
     """JSON in, JSON out. Validation errors return 422 automatically."""
     return JSONResponse(score_all(payload.model_dump()))
-
-
-@app.get("/about", response_class=HTMLResponse)
-def about(request: Request):
-    return templates.TemplateResponse(request, "about.html", {})
-
-
-@app.get("/leakage", response_class=HTMLResponse)
-def leakage(request: Request):
-    return templates.TemplateResponse(request, "leakage.html", {
-        "lesson": METRICS.get("leakage_lesson", {}),
-        "food_metrics": METRICS.get("food_model", {}),
-    })
 
 
 @app.get("/health")

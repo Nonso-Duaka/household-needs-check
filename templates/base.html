@@ -3,32 +3,44 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Household Needs Screening{% endblock %}</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <meta name="color-scheme" content="light dark">
+  <title>{% block title %}Household Needs Check{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css?v=3">
 </head>
 <body>
-  <div class="banner" role="alert">
-    <strong>Demonstration only.</strong> Synthetic data. This is
-    <strong>not an eligibility determination</strong> and not a substitute for a
-    caseworker. Nothing you enter is stored or logged.
-  </div>
-
-  <header class="topbar">
-    <a class="brand" href="/">Household Needs Screening</a>
-    <nav>
-      <a href="/">Screening</a>
-      <a href="/leakage">Why 0.75, not 0.89</a>
-      <a href="/about">About</a>
-    </nav>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="m9 14 2 2 4-4"/>
+      </svg>
+      <span class="brand-name">Household Needs Check</span>
+    </a>
   </header>
 
-  <main class="wrap">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="grad-high" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#f6a641"/><stop offset="1" stop-color="#d23b2f"/>
+      </linearGradient>
+      <linearGradient id="grad-low" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#43c08a"/><stop offset="1" stop-color="#1f8a70"/>
+      </linearGradient>
+      <linearGradient id="grad-score" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#5aa0ef"/><stop offset="1" stop-color="#3b5fbf"/>
+      </linearGradient>
+      <linearGradient id="grad-bar" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#6f97d6"/><stop offset="1" stop-color="#3b5fbf"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <main class="page">
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="foot">
-    Estimates and suggestions for review only — never eligible / denied /
-    qualifies. Built on a synthetic teaching dataset.
+  <footer class="site-footer">
+    <span>An estimate to start a conversation — not an official decision. Your answers aren't saved.</span>
   </footer>
   {% block scripts %}{% endblock %}
 </body>

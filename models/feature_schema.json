@@ -1,0 +1,307 @@
+{
+  "schema_version": "1.0",
+  "created_utc": "2026-07-24T04:31:15+00:00",
+  "target": {
+    "name": "food_insecure_label",
+    "positive_rate_train": 0.2829,
+    "default_threshold": 0.5,
+    "risk_bands": [
+      {
+        "label": "Low chance",
+        "min": 0.0,
+        "max": 0.25
+      },
+      {
+        "label": "Some chance",
+        "min": 0.25,
+        "max": 0.5
+      },
+      {
+        "label": "Higher chance",
+        "min": 0.5,
+        "max": 0.7
+      },
+      {
+        "label": "High chance",
+        "min": 0.7,
+        "max": 1.01
+      }
+    ],
+    "note": "Estimated probability of food insecurity, not an eligibility decision."
+  },
+  "model": {
+    "type": "LogisticRegression(class_weight='balanced')",
+    "feature_order": [
+      "monthly_income_usd",
+      "household_size",
+      "children_count",
+      "monthly_housing_cost_usd",
+      "housing_status",
+      "employment_status",
+      "income_volatility",
+      "savings_buffer_days",
+      "benefits_snap",
+      "transportation_access",
+      "distance_to_grocery_miles",
+      "behind_on_housing_payment",
+      "utility_shutoff_notice",
+      "chronic_health_condition",
+      "rent_or_mortgage_burden_pct",
+      "income_to_poverty_ratio",
+      "food_desert_flag"
+    ],
+    "numeric_features": [
+      "monthly_income_usd",
+      "household_size",
+      "children_count",
+      "monthly_housing_cost_usd",
+      "savings_buffer_days",
+      "benefits_snap",
+      "distance_to_grocery_miles",
+      "behind_on_housing_payment",
+      "utility_shutoff_notice",
+      "chronic_health_condition",
+      "rent_or_mortgage_burden_pct",
+      "income_to_poverty_ratio",
+      "food_desert_flag"
+    ],
+    "categorical_features": [
+      "housing_status",
+      "employment_status",
+      "income_volatility",
+      "transportation_access"
+    ]
+  },
+  "segments": {
+    "classes": [
+      "benefit_navigation",
+      "housing_emergency",
+      "prevention_support",
+      "severe_multiple_hardship",
+      "stable_or_low_need"
+    ],
+    "labels": {
+      "stable_or_low_need": "Fairly steady for now",
+      "prevention_support": "Could use a little support",
+      "benefit_navigation": "Help signing up for benefits",
+      "housing_emergency": "Housing help needed",
+      "severe_multiple_hardship": "Needs coordinated support"
+    },
+    "actions": {
+      "stable_or_low_need": "Things look fairly steady right now. General resources may still be useful.",
+      "prevention_support": "A little help now \u2014 like budgeting support \u2014 could keep small problems from growing.",
+      "benefit_navigation": "Getting signed up for benefits like SNAP, WIC, or school meals could help the most.",
+      "housing_emergency": "Housing looks like the urgent need \u2014 rent help, eviction help, or utility help.",
+      "severe_multiple_hardship": "Several needs at once. Someone who can coordinate different kinds of help would fit best."
+    }
+  },
+  "form_fields": [
+    {
+      "name": "household_size",
+      "type": "int",
+      "group": "Your household",
+      "label": "How many people live in your home?",
+      "helper": "Count everyone \u2014 grown-ups and kids.",
+      "default": 2,
+      "min": 1,
+      "max": 8
+    },
+    {
+      "name": "children_count",
+      "type": "int",
+      "group": "Your household",
+      "label": "How many of them are kids (under 18)?",
+      "helper": "Put 0 if there are none.",
+      "default": 0,
+      "min": 0,
+      "max": 7
+    },
+    {
+      "name": "monthly_income_usd",
+      "type": "int",
+      "group": "Money & work",
+      "label": "How much money does your household get each month?",
+      "helper": "Add up everything everyone brings in \u2014 pay, benefits, all of it.",
+      "default": 3870,
+      "min": 300,
+      "max": 25000
+    },
+    {
+      "name": "employment_status",
+      "type": "categorical",
+      "group": "Money & work",
+      "label": "Does the main earner have a job?",
+      "helper": "Pick what fits best right now.",
+      "default": "employed_full_time",
+      "levels": [
+        "employed_full_time",
+        "employed_part_time",
+        "unemployed",
+        "not_in_labor_force",
+        "retired",
+        "student_or_training"
+      ],
+      "level_labels": {
+        "employed_full_time": "Yes, full-time",
+        "employed_part_time": "Yes, part-time",
+        "unemployed": "No, looking for work",
+        "not_in_labor_force": "No, not looking",
+        "retired": "Retired",
+        "student_or_training": "In school or training"
+      }
+    },
+    {
+      "name": "income_volatility",
+      "type": "categorical",
+      "group": "Money & work",
+      "label": "Is that money about the same every month?",
+      "helper": "Some jobs pay the same each month; others go up and down.",
+      "default": "high",
+      "levels": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "level_labels": {
+        "low": "About the same",
+        "medium": "Changes a little",
+        "high": "Changes a lot"
+      }
+    },
+    {
+      "name": "savings_buffer_days",
+      "type": "int",
+      "group": "Money & work",
+      "label": "If the money stopped, how many days could savings cover the basics?",
+      "helper": "A rough guess is fine. 0 means no savings to fall back on.",
+      "default": 23,
+      "min": 0,
+      "max": 180
+    },
+    {
+      "name": "benefits_snap",
+      "type": "binary",
+      "group": "Money & work",
+      "label": "Does your household get SNAP (food stamps)?",
+      "helper": "",
+      "default": 0,
+      "min": 0,
+      "max": 1
+    },
+    {
+      "name": "monthly_housing_cost_usd",
+      "type": "int",
+      "group": "Your home",
+      "label": "How much do you pay for housing each month?",
+      "helper": "Rent or mortgage. Put 0 if you pay nothing.",
+      "default": 1418,
+      "min": 0,
+      "max": 9000
+    },
+    {
+      "name": "housing_status",
+      "type": "categorical",
+      "group": "Your home",
+      "label": "What's your home situation?",
+      "helper": "",
+      "default": "rent",
+      "levels": [
+        "own_mortgage",
+        "own_no_mortgage",
+        "rent",
+        "doubled_up",
+        "shelter_or_transitional"
+      ],
+      "level_labels": {
+        "own_mortgage": "Own it, still paying it off",
+        "own_no_mortgage": "Own it, paid off",
+        "rent": "Renting",
+        "doubled_up": "Staying with family or friends",
+        "shelter_or_transitional": "Shelter or temporary housing"
+      }
+    },
+    {
+      "name": "behind_on_housing_payment",
+      "type": "binary",
+      "group": "Your home",
+      "label": "Are you behind on rent or mortgage?",
+      "helper": "",
+      "default": 0,
+      "min": 0,
+      "max": 1
+    },
+    {
+      "name": "utility_shutoff_notice",
+      "type": "binary",
+      "group": "Your home",
+      "label": "Had a shut-off warning for a utility lately?",
+      "helper": "Like a notice that power, water, or gas might be turned off.",
+      "default": 0,
+      "min": 0,
+      "max": 1
+    },
+    {
+      "name": "transportation_access",
+      "type": "categorical",
+      "group": "Food & getting around",
+      "label": "How easy is it to get around?",
+      "helper": "For work, appointments, and shopping.",
+      "default": "reliable",
+      "levels": [
+        "reliable",
+        "limited",
+        "no_vehicle_or_transit"
+      ],
+      "level_labels": {
+        "reliable": "Easy \u2014 I have a reliable ride",
+        "limited": "A bit hard",
+        "no_vehicle_or_transit": "Very hard \u2014 no car or bus"
+      }
+    },
+    {
+      "name": "distance_to_grocery_miles",
+      "type": "float",
+      "group": "Food & getting around",
+      "label": "How far is the nearest grocery store, in miles?",
+      "helper": "A real grocery store, not a corner shop.",
+      "default": 1.7,
+      "min": 0.1,
+      "max": 45
+    },
+    {
+      "name": "chronic_health_condition",
+      "type": "binary",
+      "group": "Health",
+      "label": "Does anyone at home have an ongoing health condition?",
+      "helper": "Something long-term, like diabetes or asthma.",
+      "default": 0,
+      "min": 0,
+      "max": 1
+    }
+  ],
+  "groups": [
+    "Your household",
+    "Money & work",
+    "Your home",
+    "Food & getting around",
+    "Health"
+  ],
+  "derived_fields": [
+    {
+      "name": "rent_or_mortgage_burden_pct",
+      "formula": "min(100 * monthly_housing_cost_usd / monthly_income_usd, 200)",
+      "description": "The share of your money that goes to housing."
+    },
+    {
+      "name": "income_to_poverty_ratio",
+      "formula": "(monthly_income_usd * 12) / (15060 + 5380 * (household_size - 1))",
+      "description": "Your income compared with the official poverty line."
+    },
+    {
+      "name": "food_desert_flag",
+      "formula": "1 if transportation_access != 'reliable' and distance_to_grocery_miles > 1.5 else 0",
+      "description": "Whether it's hard to reach a grocery store."
+    }
+  ],
+  "schema_hash": "e496d995483c173b"
+}

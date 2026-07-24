@@ -1,16 +1,19 @@
 # Large synthetic dataset (regenerable; not source)
 dataset/*.csv
 
-# Trained artifacts are build outputs — regenerate with `python train.py`.
-# weights.yaml is hand-editable config, so it stays tracked (below).
-models/*.joblib
-models/feature_schema.json
+# The deployed app loads these at startup, so they are TRACKED (small):
+#   models/food_model.joblib, models/segment_model.joblib,
+#   models/feature_schema.json, models/weights.yaml
+# Only the training-report artifacts are ignored:
 models/metrics.json
 models/comparison.csv
-!models/weights.yaml
 
 .venv/
 __pycache__/
 *.pyc
 .pytest_cache/
 .ipynb_checkpoints/
+
+# Reference-only material (not part of the deployed app)
+notebooks/
+dataset/

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#dcebfb"/>
+      <stop offset="0.55" stop-color="#eaf1f8"/>
+      <stop offset="1" stop-color="#f7f1e6"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffe6b8" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#ffe6b8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="42"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="420" fill="url(#sky)"/>
+
+  <!-- soft mesh blobs -->
+  <g filter="url(#soft)">
+    <circle cx="230" cy="120" r="150" fill="#7fb4ec" opacity="0.35"/>
+    <circle cx="980" cy="90" r="170" fill="#63c6c0" opacity="0.30"/>
+    <circle cx="640" cy="220" r="150" fill="#a7c7f0" opacity="0.28"/>
+    <circle cx="1080" cy="260" r="140" fill="#f4c98a" opacity="0.30"/>
+  </g>
+
+  <!-- warm sun glow -->
+  <circle cx="1000" cy="110" r="150" fill="url(#sun)"/>
+
+  <!-- neighborhood skyline (translucent, layered) -->
+  <g opacity="0.16" fill="#1a5fb4">
+    <path d="M0 420 V330 h70 l35 -34 35 34 h60 V300 h90 l45 -42 45 42 h70 V340 h80 l40 -38 40 38 h70 V312 h95 l48 -44 48 44 h72 V336 h84 l42 -40 42 40 h80 V420 Z"/>
+  </g>
+  <g opacity="0.24" fill="#1a5fb4">
+    <path d="M0 420 V360 h90 l44 -40 44 40 h84 V344 h80 l40 -36 40 36 h96 V366 h74 l38 -34 38 34 h90 V350 h86 l42 -38 42 38 h100 V372 h78 l40 -36 40 36 h86 V420 Z"/>
+  </g>
+
+  <!-- little windows -->
+  <g fill="#f7f1e6" opacity="0.55">
+    <rect x="120" y="372" width="8" height="10" rx="1"/>
+    <rect x="300" y="378" width="8" height="10" rx="1"/>
+    <rect x="470" y="376" width="8" height="10" rx="1"/>
+    <rect x="655" y="380" width="8" height="10" rx="1"/>
+    <rect x="835" y="374" width="8" height="10" rx="1"/>
+    <rect x="1015" y="382" width="8" height="10" rx="1"/>
+  </g>
+</svg>
